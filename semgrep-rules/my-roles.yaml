@@ -1,0 +1,32 @@
+rules:
+  # 1. SQL Injection Rule (Regex)
+  - id: force-sql-injection-detection
+    languages:
+      - javascript
+    message: "SQL Injection detected! Found a SQL statement combined with '+' operator."
+    severity: ERROR
+    patterns:
+      - pattern-regex: 'SELECT .* \+'
+
+  # 2. Sensitive Data Exposure Rule (OTP Leak)
+  - id: sensitive-data-exposure-in-error
+    languages:
+      - javascript
+    message: "Sensitive Data Exposure detected! You are concatenating a variable directly into an error message sent to the user. This often leads to leaking secrets like tokens or internal paths."
+    severity: ERROR
+    metadata:
+      owasp: "A05: Security Misconfiguration"
+    patterns:
+      - pattern: |
+          res.status(...).json({error: "..." + $VAR})
+
+  # 3. Mass Assignment Rule (Privilege Escalation)
+  - id: sequelize-mass-assignment
+    languages:
+      - javascript
+    message: "Mass Assignment Vulnerability detected! Passing 'req.body' directly to the update function is dangerous. It allows attackers to inject restricted fields like 'role: admin'. You should explicitly whitelist allowed fields (e.g., { name: req.body.name })."
+    severity: ERROR
+    metadata:
+      owasp: "A01: Broken Access Control"
+    patterns:
+      - pattern: $MODEL.update(req.body, ...)

@@ -1,0 +1,83 @@
+rules:
+  - id: multer-upload-pic-exact
+    languages:
+      - javascript
+    message: >
+      Detected file upload endpoint using multer at /v1/admin/upload-pic/.
+      Ensure proper validation of uploaded files to prevent unrestricted file upload vulnerabilities.
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-434"
+      owasp: "A05:2021 – Security Misconfiguration / File Upload Vulnerability"
+      confidence: VERY_HIGH
+      endpoint: "/v1/admin/upload-pic/"
+      framework: "Express.js + Multer"
+      notes: "Check file type, size, and storage path to prevent unsafe uploads."
+    pattern: |
+      const uploadImage = multer({ dest: './uploads/', })
+      app.post('/v1/admin/upload-pic/', uploadImage.single('file'), async function (req, res) {
+          if (!req.file) {
+              res.sendStatus(500);
+              return;
+          }
+
+          try {
+              const image = req.file;
+              res.json(image);
+          } catch (err) {
+              res.json({error: err.toString()});
+          }
+      });
+
+      
+  - id: express-open-redirect-exact-v1-redirect
+    languages:
+      - javascript
+    message: >
+      Open Redirect vulnerability detected: a user-controlled query parameter
+      (req.query.url) is directly passed to res.redirect() without validation.
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-601"
+      owasp: "A01: Broken Access Control"
+      confidence: VERY_HIGH
+      endpoint: "/v1/redirect/"
+      framework: "Express.js"
+      attack_example: "/v1/redirect/?url=https://evil.com"
+    pattern: |
+      app.get('/v1/redirect/', (req, res) => {
+        var url = req.query.url
+        ...
+        if (url) {
+          res.redirect(url);
+        } else {
+          next()
+        }
+      });
+
+      
+  - id: nunjucks-renderstring-xss
+    message: >
+      Reflected XSS vulnerability: user-controlled input is rendered
+      using nunjucks.renderString without sanitization or escaping.
+    severity: ERROR
+    languages:
+      - javascript
+    patterns:
+      - pattern: |
+          nunjucks.renderString($INPUT)
+
+  
+  - id: check-user-role
+    patterns:
+      - pattern: |
+          db.user.findOne({include: ..., where: { id: $ID }})
+    message: "Potential missing role check: this code fetches user data without verifying if requester is admin."
+    languages: [javascript]
+    severity: WARNING
+
+
+
+

@@ -1,0 +1,58 @@
+rules:
+  - id: jwt-hardcoded-secret
+    languages:
+      - javascript
+      - typescript
+    severity: ERROR
+    message: |
+      Hardcoded or fallback JWT secret detected.
+      Do not use default secrets like "superSecretPassword".
+      JWT secrets must come from secure environment variables.
+    metadata:
+      category: security
+      technology: jwt
+      cwe: "CWE-798: Use of Hard-coded Credentials"
+      owasp: "A02:2021 – Cryptographic Failures"
+    patterns:
+      - pattern-either:
+          # env var OR hardcoded string
+         
+          - pattern: |
+              const jwtTokenSecret = "SuperSecret"
+  
+  - id: jwt-decode-without-verify
+    message: >
+      JWT token is decoded without signature verification. 
+      Use jwt.verify() instead of jwt.decode().
+    severity: ERROR
+    languages:
+      - javascript
+      - typescript
+    patterns:
+      - pattern: jwt.decode($TOKEN)
+
+  
+  
+  - id: node-path-traversal-beer-pic
+    languages:
+      - javascript
+    severity: ERROR
+    message: |
+      Path Traversal vulnerability:
+      User input from req.query.picture flows into fs.readFile.
+      This allows attackers to read arbitrary files using ../ sequences.
+    metadata:
+      category: security
+      cwe: "CWE-22"
+      owasp: "A01:2021 - Broken Access Control"
+      technology:
+        - nodejs
+        - express
+    mode: taint
+
+    pattern-sources:
+      - pattern: req.query.picture
+
+    pattern-sinks:
+      - pattern: fs.readFile($PATH.join, ...)
+      - pattern: fs.readFileSync($PATH, ...)
